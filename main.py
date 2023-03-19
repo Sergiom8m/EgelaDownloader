@@ -45,6 +45,7 @@ def firstRequest():
     #########################################################################
     # GET /login/index.php HTTP / 1.1
     # Host: egela.ehu.eus
+
     #########################################################################
 
     # MAKE THE VARIABLES GLOBAL TO BE ACCESSIBLE FROM EVERYWHERE
@@ -89,8 +90,13 @@ def firstRequest():
 
 def secondRequest():
     #########################################################################
-    # GET /login/index.php HTTP / 1.1
+    # POST /login/index.php HTTP/1.1
     # Host: egela.ehu.eus
+    # Cookie: MoodleSessionegela=h9u7hc7tq3td8mjbn69agpi6kerg926r
+    # Content-Type: application/x-www-form-urlencoded
+    # Content-Length: 78
+
+    # logintoken=osblYrKvsyE9lz3ZHhVAX2CfTZSEbXVf&username=998069&password=Ik452531*
     #########################################################################
 
     # MAKE THE VARIABLES GLOBAL TO BE ACCESSIBLE FROM EVERYWHERE
@@ -105,7 +111,6 @@ def secondRequest():
     encoded_content = urllib.parse.urlencode(content)
     headers['Content-Length'] = str(len(encoded_content))
 
-
     # GET REQUEST'S RESPONSE
     response = requests.post(uriRequest, headers=headers, data=content, allow_redirects=False)
     code = response.status_code
@@ -118,7 +123,6 @@ def secondRequest():
     cookie = response.headers['Set-Cookie'].split(';')[0]
     print("2nd REQUEST COOKIE --> " + cookie)
 
-
     # CHECK IF LOCATION URI EXISTS OR NOT
     if ('Location' in response.headers) is True:
         uriRequest = response.headers['Location']
@@ -127,7 +131,40 @@ def secondRequest():
     print("URI  FOR THE 3rd REQUEST --> " + uriRequest)
 
 
+def thirdRequest():
+    #########################################################################
+    # GET /login/index.php?testsession=89877 HTTP/1.1
+    # Host: egela.ehu.eus
+    # Cookie: MoodleSessionegela=ohej2su7lkmrbbtgknkshi7sk68i91qg
+
+    #########################################################################
+
+    # MAKE THE VARIABLES GLOBAL TO BE ACCESSIBLE FROM EVERYWHERE
+    global uriRequest
+    global cookie
+
+    # SET THE REQUEST
+    method = "GET"
+    headers = {'Host': uriRequest.split('/')[2], 'Cookie': cookie}
+
+    # GET REQUEST'S RESPONSE
+    response = requests.get(uriRequest, headers=headers, allow_redirects=False)
+    code = response.status_code
+    description = response.reason
+    print("3rd REQUEST'S METHOD AND URI -->" + method + " " + uriRequest)
+    print("3rd REQUEST --> " + str(code) + " " + description)
+
+    #CHECK IF LOCATION URI EXISTS OR NOT
+    if ('Location' in response.headers) is True:
+        uriEskaera = response.headers['Location']
+
+    # PRINT THE COOKIE VALUE AND THE URI FOR THE NEXT REQUEST
+    print("3rd REQUEST COOKIE --> ", cookie)
+    print("URI  FOR THE 4th REQUEST --> ", uriEskaera)
+
+
 if __name__ == '__main__':
     data_request()
     firstRequest()
     secondRequest()
+    thirdRequest()
