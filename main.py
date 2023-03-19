@@ -156,15 +156,73 @@ def thirdRequest():
 
     #CHECK IF LOCATION URI EXISTS OR NOT
     if ('Location' in response.headers) is True:
-        uriEskaera = response.headers['Location']
+        uriRequest = response.headers['Location']
 
     # PRINT THE COOKIE VALUE AND THE URI FOR THE NEXT REQUEST
     print("3rd REQUEST COOKIE --> ", cookie)
-    print("URI  FOR THE 4th REQUEST --> ", uriEskaera)
+    print("URI FOR THE 4th REQUEST --> ", uriRequest)
+
+def fourthRequest():
+
+    # MAKE THE VARIABLES GLOBAL TO BE ACCESSIBLE FROM EVERYWHERE
+    global uriRequest
+
+    # SET THE REQUEST
+    method = "GET"
+    headers = {'Host': uriRequest.split('/')[2], 'Cookie': cookie}
+
+    # GET REQUEST'S RESPONSE
+    response = requests.get(uriRequest, headers=headers, allow_redirects=False)
+    code = response.status_code
+    description = response.reason
+    print("4th REQUEST'S METHOD AND URI --> " + method + " " + uriRequest)
+    print("4th REQUEST --> " + str(code) + " " + description)
+    print("4th REQUEST COOKIE --> " + cookie)
+
+    # GET THE RESPONSE CONTENT (HTML)
+    html = response.content
+    htmlString = str(html)
+
+    # PARSE THE HTML CODE
+    soup = BeautifulSoup(html, 'html.parser')
+
+    # ASSURE THE LOGIN DATA IS CORRECT
+    if response.status_code == 200 and htmlString.find(nameSurname) != -1:
+        print("LOGGED SUCCESSFULLY")
+
+    # else:
+        # print("THE LOGIN DATA IS NOT CORRECT! TRY AGAIN...")
+        # sys.exit(0)
+
+    # GET THE NAME OF THE USER
+    name = soup.find('span', {'class': 'usertext mr-1'})
+    print("MY NAME --> " + name.text)
+
+    # GET THE NAMES OF THE SUBJETCS IN EGELA
+    rows = soup.find_all('div', {'class': 'info'})
+
+    # ITERATE ROWS TO SEE THE NAMES OF THE DIFFERENT SUBJECTS IN EGELA
+    for idx, row in enumerate(rows):
+        subject = row.h3.a.text
+
+        # CATCH THE ROW THAT CONTAINS THE SUBJECT "Web Sistemak"
+        if (row == 'Web Sistemak'):
+            # GET THE URI THAT REFERS TO "Web Sistemak" SUBJECT
+            uriRequest = row.a['href']
+            print("SUBJECT --> ", subject)
+            print("URI FOR THE 5th REQUEST ", uriRequest)
 
 
 if __name__ == '__main__':
+    print("------------------------------------------------------------")
     data_request()
+    print("------------------------------------------------------------")
     firstRequest()
+    print("------------------------------------------------------------")
     secondRequest()
+    print("------------------------------------------------------------")
     thirdRequest()
+    print("------------------------------------------------------------")
+    fourthRequest()
+    print("------------------------------------------------------------")
+
