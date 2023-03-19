@@ -16,8 +16,8 @@ loginToken = ''
 uriRequest = ''
 countPDF = 0
 
-
 def data_request():
+
     # MAKE THE VARIABLES GLOBAL TO BE ACCESSIBLE FROM EVERYWHERE
     global user
     global password
@@ -43,6 +43,7 @@ def data_request():
 
 
 def firstRequest():
+
     #########################################################################
     # GET /login/index.php HTTP / 1.1
     # Host: egela.ehu.eus
@@ -90,6 +91,7 @@ def firstRequest():
 
 
 def secondRequest():
+
     #########################################################################
     # POST /login/index.php HTTP/1.1
     # Host: egela.ehu.eus
@@ -133,6 +135,7 @@ def secondRequest():
 
 
 def thirdRequest():
+
     #########################################################################
     # GET /login/index.php?testsession=89877 HTTP/1.1
     # Host: egela.ehu.eus
@@ -163,7 +166,9 @@ def thirdRequest():
     print("3rd REQUEST COOKIE --> ", cookie)
     print("URI FOR THE 4th REQUEST --> ", uriRequest)
 
+
 def fourthRequest():
+
     #########################################################################
     # GET / HTTP/1.1
     # Host: egela.ehu.eus
@@ -221,10 +226,6 @@ def fourthRequest():
 
 
 def fifthRequest():
-    # Web Sistema ikasgaiko eskaera egindo da metodo honetan.
-    # GET /course/view.php?id=57996 HTTP / 1.1
-    # Host: egela.ehu.eus
-    # Cookie: MoodleSessionegela = u47586166f8ag046jf14eau8vbhjr1a2
 
     global uriRequest
 
@@ -261,6 +262,8 @@ def fifthRequest():
             print("INFO OF THE PDF --> ", infoPDF)
             downloadRequest(infoPDF[0], infoPDF[1])
 
+
+
 def pdfRequest():
 
     global uriRequest
@@ -295,6 +298,8 @@ def pdfRequest():
     print("PDF_IZENA --> ", namePDF)
     return uriPDF, namePDF
 
+
+
 def downloadRequest(uriPDF, namePDF):
 
     global countPDF
@@ -324,6 +329,7 @@ def downloadRequest(uriPDF, namePDF):
 
 
 if __name__ == '__main__':
+
     print("------------------------------------------------------------")
     data_request()
     print("------------------------------------------------------------")
