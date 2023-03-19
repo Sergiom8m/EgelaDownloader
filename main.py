@@ -42,7 +42,6 @@ def data_request():
 
 
 def firstRequest():
-
     #########################################################################
     # GET /login/index.php HTTP / 1.1
     # Host: egela.ehu.eus
@@ -62,19 +61,19 @@ def firstRequest():
     response = requests.get(uri, headers=headers, allow_redirects=False)
     code = response.status_code
     description = response.reason
-    print("1º REQUEST'S METHOD AND URI --> " + method + " " + uri)
-    print("1º REQUEST --> " + str(code) + " " + description)
+    print("1st REQUEST'S METHOD AND URI --> " + method + " " + uri)
+    print("1st REQUEST --> " + str(code) + " " + description)
 
     # GET THE COOKIE VALUE
     cookie = response.headers['Set-Cookie'].split(';')[0]
-    print("1º REQUEST'S COOKIE --> " + cookie)
+    print("1st REQUEST'S COOKIE --> " + cookie)
 
     # CHECK IF LOCATION URI EXISTS OR NOT
     if ('Location' in response.headers) is False:
         uriRequest = uri
 
     # PRINT THE URI FOR THE NEXT REQUEST
-    print("URI REQUEST --> " + uriRequest)
+    print("URI FOR THE 2nd REQUEST --> " + uriRequest)
 
     # GET THE REQUEST CONTENT (HTML)
     html = response.content
@@ -87,6 +86,48 @@ def firstRequest():
         loginToken = token['value']
         print("LOGIN TOKEN --> ", loginToken)
 
+
+def secondRequest():
+    #########################################################################
+    # GET /login/index.php HTTP / 1.1
+    # Host: egela.ehu.eus
+    #########################################################################
+
+    # MAKE THE VARIABLES GLOBAL TO BE ACCESSIBLE FROM EVERYWHERE
+    global cookie
+    global uriRequest  # IT HAS THE VALUE GOTTEN FROM THE LOCATION HEADER AT THE PREVIOUS REQUEST
+    global loginToken
+
+    # SET THE REQUEST
+    method = "POST"
+    headers = {'Host': 'egela.ehu.eus', 'Cookie': cookie, 'Content-Type': 'application/x-www-form-urlencoded'}
+    content = {'logintoken': loginToken, 'username': user, 'password': password}
+    encoded_content = urllib.parse.urlencode(content)
+    headers['Content-Length'] = str(len(encoded_content))
+
+
+    # GET REQUEST'S RESPONSE
+    response = requests.post(uriRequest, headers=headers, data=content, allow_redirects=False)
+    code = response.status_code
+    description = response.reason
+    print("2nd REQUEST'S METHOD AND URI --> " + method + " " + uriRequest)
+    print("2nd REQUEST CONTENT --> ", content)
+    print("2nd REQUEST --> " + str(code) + " " + description)
+
+    # GET THE NEW COOKIE VALUE
+    cookie = response.headers['Set-Cookie'].split(';')[0]
+    print("2nd REQUEST COOKIE --> " + cookie)
+
+
+    # CHECK IF LOCATION URI EXISTS OR NOT
+    if ('Location' in response.headers) is True:
+        uriRequest = response.headers['Location']
+
+    # PRINT THE URI FOR THE NEXT REQUEST
+    print("URI  FOR THE 3rd REQUEST --> " + uriRequest)
+
+
 if __name__ == '__main__':
-    data_request();
-    firstRequest();
+    data_request()
+    firstRequest()
+    secondRequest()
