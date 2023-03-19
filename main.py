@@ -1,4 +1,5 @@
 import getpass
+import os
 import signal
 import sys
 import urllib
@@ -13,7 +14,7 @@ password = ''
 cookie = ''
 loginToken = ''
 uriRequest = ''
-pdfcount = 0
+countPDF = 0
 
 
 def data_request():
@@ -163,6 +164,12 @@ def thirdRequest():
     print("URI FOR THE 4th REQUEST --> ", uriRequest)
 
 def fourthRequest():
+    #########################################################################
+    # GET / HTTP/1.1
+    # Host: egela.ehu.eus
+    # Cookie: MoodleSessionegela=ohej2su7lkmrbbtgknkshi7sk68i91qg
+
+    #########################################################################
 
     # MAKE THE VARIABLES GLOBAL TO BE ACCESSIBLE FROM EVERYWHERE
     global uriRequest
@@ -206,11 +213,114 @@ def fourthRequest():
         subject = row.h3.a.text
 
         # CATCH THE ROW THAT CONTAINS THE SUBJECT "Web Sistemak"
-        if (row == 'Web Sistemak'):
+        if (subject == 'Web Sistemak'):
             # GET THE URI THAT REFERS TO "Web Sistemak" SUBJECT
             uriRequest = row.a['href']
             print("SUBJECT --> ", subject)
             print("URI FOR THE 5th REQUEST ", uriRequest)
+
+
+def fifthRequest():
+    # Web Sistema ikasgaiko eskaera egindo da metodo honetan.
+    # GET /course/view.php?id=57996 HTTP / 1.1
+    # Host: egela.ehu.eus
+    # Cookie: MoodleSessionegela = u47586166f8ag046jf14eau8vbhjr1a2
+
+    global uriRequest
+
+    # SET THE REQUEST
+    method = 'GET'
+    headers = {'Host': uriRequest.split('/')[2], 'Cookie': cookie}
+
+    # GET REQUEST'S RESPONSE
+    response = requests.get(uriRequest, headers=headers, allow_redirects=False)
+    code = response.status_code
+    description = response.reason
+    print("5th REQUEST'S METHOD AND URI --> " + method + " " + uriRequest)
+    print("5th REQUEST --> " + str(code) + " " + description)
+    print("5th REQUEST COOKIE --> " + cookie)
+
+    # GET THE REQUEST CONTENT (HTML)
+    html = response.content
+
+    # PARSE THE HTML CODE TO GET ALL THE FILES
+    soup = BeautifulSoup(html, 'html.parser')
+    links = soup.find_all('img', {'class': 'iconlarge activityicon'})
+
+    # ITERATE ALL THE LINKS TO GET THE PDF LINKS
+    for link in links:
+
+        # CHECK IF THE HTML ELEMENT CONTAINS "/PDF"
+        if(link['src'].find("/pdf") != -1): # IF NOT FOUND -1
+            print("\n A NEW PDF HAS BEEN FOUND")
+            pdf_link = link['src']
+            uriRequest = link.parent['href'] # GET THE URI OF THE RESOURCE
+            print(pdf_link)
+            print(uriRequest)
+            infoPDF = pdfRequest()
+            print("INFO OF THE PDF --> ", infoPDF)
+            downloadRequest(infoPDF[0], infoPDF[1])
+
+def pdfRequest():
+
+    global uriRequest
+
+    # CREATE A FOLDER FOR THE DOWNLOADED PDF FILES
+    if not os.path.exists("pdf"):
+        os.mkdir("pdf")
+
+    # SET THE REQUEST
+    method = 'GET'
+    headers = {'Host': uriRequest.split('/')[2], 'Cookie': cookie}
+
+    # GET THE REQUEST'S RESPONSE
+    response = requests.get(uriRequest, headers=headers, allow_redirects=False)
+    code = response.status_code
+    description = response.reason
+    print("PDF REQUEST'S METHOD AND URI --> " + method + " " + uriRequest)
+    print("PDF REQUEST --> " + str(code) + " " + description)
+    print("PDF REQUEST COOKIE --> " + cookie)
+
+    # GET THE REQUEST'S CONTENT (HTML)
+    html = response.content
+
+    # PARSE THE HTML CODE TO GET THE PDF FILES
+    soup = BeautifulSoup(html, 'html.parser')
+    pdf = soup.find('div', {'class': 'resourceworkaround'})
+
+    # GET THE NAMES AND THE URI OF THE PDF FILES
+    uriPDF = pdf.a['href']
+    namePDF = uriPDF.split('/')[-1]
+    print("PDF_URI --> ", uriPDF)
+    print("PDF_IZENA --> ", namePDF)
+    return uriPDF, namePDF
+
+def downloadRequest(uriPDF, namePDF):
+
+    global countPDF
+
+    print(" ---- DOWNLOADING PDF FILE ----")
+
+    # SET THE REQUEST
+    method = 'GET'
+    headers = {'Host': uriPDF.split('/')[2], 'Cookie': cookie}
+    response = requests.get(uriPDF, headers=headers, allow_redirects=False)
+    code = response.status_code
+    description = response.reason
+    print("DOWNLOAD REQUEST METHOD AND URI --> " + method + " " + uriPDF)
+    print("DOWNLOAD REQUEST --> " + str(code) + " " + description)
+    print("DOWNLOAD REQUEST COOKIE --> " + cookie)
+
+    # SAVE THE PDF CONTENT ON A FILE
+    contentPDF = response.content
+    file = open("./pdf/" + namePDF, "wb")
+    file.write(contentPDF)
+    file.close()
+
+    print("----" + namePDF + " HAS BEEN DOWNLOADED ----")
+
+    # UPDATE THE PDF COUNT VARIABLE
+    countPDF = countPDF + 1
 
 
 if __name__ == '__main__':
@@ -225,4 +335,8 @@ if __name__ == '__main__':
     print("------------------------------------------------------------")
     fourthRequest()
     print("------------------------------------------------------------")
+    fifthRequest()
+    print("------------------------------------------------------------")
+
+
 
