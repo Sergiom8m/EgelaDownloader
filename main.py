@@ -130,6 +130,7 @@ def secondRequest():
         print("THE PASSWORD IS NOT CORRECT")
         exit(0)
 
+
     # CHECK IF LOCATION URI EXISTS OR NOT
     if ('Location' in response.headers) is True:
         uriRequest = response.headers['Location']
