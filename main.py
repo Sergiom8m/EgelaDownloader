@@ -123,8 +123,12 @@ def secondRequest():
     print("2nd REQUEST --> " + str(code) + " " + description)
 
     # GET THE NEW COOKIE VALUE
-    cookie = response.headers['Set-Cookie'].split(';')[0]
-    print("2nd REQUEST COOKIE --> " + cookie)
+    if (response.headers['Location'] != "https://egela.ehu.eus/login/index.php"):
+        cookie = response.headers['Set-Cookie'].split(';')[0]
+        print("2nd REQUEST COOKIE --> " + cookie)
+    else:
+        print("THE PASSWORD IS NOT CORRECT")
+        exit(0)
 
     # CHECK IF LOCATION URI EXISTS OR NOT
     if ('Location' in response.headers) is True:
@@ -202,13 +206,15 @@ def fourthRequest():
     if response.status_code == 200 and htmlString.find(nameSurname) != -1:
         print("LOGGED SUCCESSFULLY")
 
-    # else:
-        # print("THE LOGIN DATA IS NOT CORRECT! TRY AGAIN...")
-        # sys.exit(0)
+    else:
+        print("THE LOGIN DATA IS NOT CORRECT! TRY AGAIN...")
+        sys.exit(0)
 
     # GET THE NAME OF THE USER
     name = soup.find('span', {'class': 'usertext mr-1'})
     print("MY NAME --> " + name.text)
+
+    input("PRESS ENTER TO DOWNLOAD PDF FILES")
 
     # GET THE NAMES OF THE SUBJETCS IN EGELA
     rows = soup.find_all('div', {'class': 'info'})
@@ -326,6 +332,38 @@ def downloadRequest(uriPDF, namePDF):
 
     # UPDATE THE PDF COUNT VARIABLE
     countPDF = countPDF + 1
+
+
+def dataForCSVRequest():
+
+    global uriRequest
+
+    # SET THE REQUEST
+    method = 'GET'
+    headers = {'Host': uriRequest.split('/')[2], 'Cookie': cookie}
+
+    # GET THE REQUEST'S RESPONSE
+    response = requests.get(uriRequest, headers=headers, allow_redirects=False)
+    code = response.status_code
+    description = response.reason
+    print("DATA FOR CSV REQUEST'S METHOD AND URI --> " + method + " " + uriRequest)
+    print("DATA FOR CSV REQUEST --> " + str(code) + " " + description)
+    print("DATA FOR CSV REQUEST COOKIE --> " + cookie)
+
+    # GET THE REQUEST'S CONTENT (HTML)
+    html = response.content
+
+    # PARSE THE HTML CODE TO GET THE PDF FILES
+    soup = BeautifulSoup(html, 'html.parser')
+    pdf = soup.find('div', {'class': 'resourceworkaround'})
+
+    # GET THE NAMES AND THE URI OF THE PDF FILES
+    uriPDF = pdf.a['href']
+    namePDF = uriPDF.split('/')[-1]
+    print("PDF_URI --> ", uriPDF)
+    print("PDF_IZENA --> ", namePDF)
+    return uriPDF, namePDF
+
 
 
 if __name__ == '__main__':
