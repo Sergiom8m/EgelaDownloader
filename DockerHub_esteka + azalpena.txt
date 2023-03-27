@@ -1,0 +1,21 @@
+DockerHub esteka:    https://hub.docker.com/r/sergiom8m8/pdf-downlaoder
+
+JARRAITU BEHARREKO PAUSUAK DOKCER ERABILIZ APLIKAZIOA EXEKUTATZEKO:
+
+	docker pull sergiom8m8/pdf-downlaoder //IRUDIA DESKARGATZEKO
+
+	docker run -v /home/sergio/docker/ws_lab2/pdf:/pdf -v /home/sergio/docker/ws_lab2/:/csv -it pdf-downloader 998069 "Sergio"
+
+
+DOCKER IRUDIA SORTZEKO ETA IGOTZEKO JARRAITU BEHARREKO PAUSUAK:
+
+	docker build -t pdf-downloader .
+
+	docker tag pdf-downloader sergom8m8/pdf-downloader
+
+	docker login -u sergiom8m8
+	
+	docker push sergiom8m8/pdf-downloader
+
+	
+
