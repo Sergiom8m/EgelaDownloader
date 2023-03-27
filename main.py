@@ -3,6 +3,7 @@ import os
 import signal
 import sys
 import urllib
+from pathlib import Path
 
 import requests
 from bs4 import BeautifulSoup
@@ -14,10 +15,11 @@ password = ''
 cookie = ''
 loginToken = ''
 uriRequest = ''
+uriRequestSubmission = ''
 countPDF = 0
 
-def data_request():
 
+def data_request():
     # MAKE THE VARIABLES GLOBAL TO BE ACCESSIBLE FROM EVERYWHERE
     global user
     global password
@@ -43,7 +45,6 @@ def data_request():
 
 
 def firstRequest():
-
     #########################################################################
     # GET /login/index.php HTTP / 1.1
     # Host: egela.ehu.eus
@@ -91,7 +92,6 @@ def firstRequest():
 
 
 def secondRequest():
-
     #########################################################################
     # POST /login/index.php HTTP/1.1
     # Host: egela.ehu.eus
@@ -122,7 +122,7 @@ def secondRequest():
     print("2nd REQUEST CONTENT --> ", content)
     print("2nd REQUEST --> " + str(code) + " " + description)
 
-    # GET THE NEW COOKIE VALUE
+    # GET THE NEW COOKIE VALUE AND CHECK THE PASSWORD'S VALIDITY
     if (response.headers['Location'] != "https://egela.ehu.eus/login/index.php"):
         cookie = response.headers['Set-Cookie'].split(';')[0]
         print("2nd REQUEST COOKIE --> " + cookie)
@@ -135,11 +135,10 @@ def secondRequest():
         uriRequest = response.headers['Location']
 
     # PRINT THE URI FOR THE NEXT REQUEST
-    print("URI  FOR THE 3rd REQUEST --> " + uriRequest)
+    print("URI FOR THE 3rd REQUEST --> " + uriRequest)
 
 
 def thirdRequest():
-
     #########################################################################
     # GET /login/index.php?testsession=89877 HTTP/1.1
     # Host: egela.ehu.eus
@@ -162,7 +161,7 @@ def thirdRequest():
     print("3rd REQUEST'S METHOD AND URI -->" + method + " " + uriRequest)
     print("3rd REQUEST --> " + str(code) + " " + description)
 
-    #CHECK IF LOCATION URI EXISTS OR NOT
+    # CHECK IF LOCATION URI EXISTS OR NOT
     if ('Location' in response.headers) is True:
         uriRequest = response.headers['Location']
 
@@ -172,7 +171,6 @@ def thirdRequest():
 
 
 def fourthRequest():
-
     #########################################################################
     # GET / HTTP/1.1
     # Host: egela.ehu.eus
@@ -182,6 +180,7 @@ def fourthRequest():
 
     # MAKE THE VARIABLES GLOBAL TO BE ACCESSIBLE FROM EVERYWHERE
     global uriRequest
+    global uriRequestSubmission
 
     # SET THE REQUEST
     method = "GET"
@@ -227,12 +226,12 @@ def fourthRequest():
         if (subject == 'Web Sistemak'):
             # GET THE URI THAT REFERS TO "Web Sistemak" SUBJECT
             uriRequest = row.a['href']
+            uriRequestSubmission = uriRequest
             print("SUBJECT --> ", subject)
             print("URI FOR THE 5th REQUEST ", uriRequest)
 
 
 def fifthRequest():
-
     global uriRequest
 
     # SET THE REQUEST
@@ -258,20 +257,15 @@ def fifthRequest():
     for link in links:
 
         # CHECK IF THE HTML ELEMENT CONTAINS "/PDF"
-        if(link['src'].find("/pdf") != -1): # IF NOT FOUND -1
+        if (link['src'].find("/pdf") != -1):  # IF NOT FOUND -1
             print("\n A NEW PDF HAS BEEN FOUND")
             pdf_link = link['src']
-            uriRequest = link.parent['href'] # GET THE URI OF THE RESOURCE
-            print(pdf_link)
-            print(uriRequest)
+            uriRequest = link.parent['href']  # GET THE URI OF THE RESOURCE
             infoPDF = pdfRequest()
-            print("INFO OF THE PDF --> ", infoPDF)
-            downloadRequest(infoPDF[0], infoPDF[1])
-
+            downloadPDFRequest(infoPDF[0], infoPDF[1])
 
 
 def pdfRequest():
-
     global uriRequest
 
     # CREATE A FOLDER FOR THE DOWNLOADED PDF FILES
@@ -286,9 +280,6 @@ def pdfRequest():
     response = requests.get(uriRequest, headers=headers, allow_redirects=False)
     code = response.status_code
     description = response.reason
-    print("PDF REQUEST'S METHOD AND URI --> " + method + " " + uriRequest)
-    print("PDF REQUEST --> " + str(code) + " " + description)
-    print("PDF REQUEST COOKIE --> " + cookie)
 
     # GET THE REQUEST'S CONTENT (HTML)
     html = response.content
@@ -301,13 +292,11 @@ def pdfRequest():
     uriPDF = pdf.a['href']
     namePDF = uriPDF.split('/')[-1]
     print("PDF_URI --> ", uriPDF)
-    print("PDF_IZENA --> ", namePDF)
+    print("PDF_NAME --> ", namePDF)
     return uriPDF, namePDF
 
 
-
-def downloadRequest(uriPDF, namePDF):
-
+def downloadPDFRequest(uriPDF, namePDF):
     global countPDF
 
     print(" ---- DOWNLOADING PDF FILE ----")
@@ -318,9 +307,6 @@ def downloadRequest(uriPDF, namePDF):
     response = requests.get(uriPDF, headers=headers, allow_redirects=False)
     code = response.status_code
     description = response.reason
-    print("DOWNLOAD REQUEST METHOD AND URI --> " + method + " " + uriPDF)
-    print("DOWNLOAD REQUEST --> " + str(code) + " " + description)
-    print("DOWNLOAD REQUEST COOKIE --> " + cookie)
 
     # SAVE THE PDF CONTENT ON A FILE
     contentPDF = response.content
@@ -328,47 +314,109 @@ def downloadRequest(uriPDF, namePDF):
     file.write(contentPDF)
     file.close()
 
-    print("----" + namePDF + " HAS BEEN DOWNLOADED ----")
+    print(" ---- SUCCESSFULLY DOWNLOADED ----")
 
     # UPDATE THE PDF COUNT VARIABLE
     countPDF = countPDF + 1
 
 
-def dataForCSVRequest():
+def labPageRequest():
 
-    global uriRequest
+    # THIS URI IS TAKEN FROM THE FOURTH REQUEST AD REFERS TO WEB SISTEMAK MAIN PAGE
+    global uriRequestSubmission
 
     # SET THE REQUEST
     method = 'GET'
-    headers = {'Host': uriRequest.split('/')[2], 'Cookie': cookie}
+    headers = {'Host': uriRequestSubmission.split('/')[2], 'Cookie': cookie}
 
     # GET THE REQUEST'S RESPONSE
-    response = requests.get(uriRequest, headers=headers, allow_redirects=False)
+    response = requests.get(uriRequestSubmission, headers=headers, allow_redirects=False)
     code = response.status_code
     description = response.reason
-    print("DATA FOR CSV REQUEST'S METHOD AND URI --> " + method + " " + uriRequest)
-    print("DATA FOR CSV REQUEST --> " + str(code) + " " + description)
-    print("DATA FOR CSV REQUEST COOKIE --> " + cookie)
 
     # GET THE REQUEST'S CONTENT (HTML)
     html = response.content
 
-    # PARSE THE HTML CODE TO GET THE PDF FILES
+    # PARSE THE HTML CODE TO GET THE LABS PAGE
     soup = BeautifulSoup(html, 'html.parser')
-    pdf = soup.find('div', {'class': 'resourceworkaround'})
+    labs = soup.findAll('a', {'class': 'nav-link', 'title': 'Laborategiko praktikak'})
 
-    # GET THE NAMES AND THE URI OF THE PDF FILES
-    uriPDF = pdf.a['href']
-    namePDF = uriPDF.split('/')[-1]
-    print("PDF_URI --> ", uriPDF)
-    print("PDF_IZENA --> ", namePDF)
-    return uriPDF, namePDF
+    # UPDATE uriRequestSubmission WITH THE LABS PAGE
+    uriRequestSubmission = labs[0]['href']
 
+
+def submissionRequest():
+
+    # THIS VARIABLE REFERS TO WEB SISTEMAK/LABORATEGIKO PRAKTIKAK PAGE
+    global uriRequestSubmission
+
+    # SET THE REQUEST
+    method = 'GET'
+    headers = {'Host': uriRequestSubmission.split('/')[2], 'Cookie': cookie}
+
+    # GET THE REQUEST'S RESPONSE
+    response = requests.get(uriRequestSubmission, headers=headers, allow_redirects=False)
+    code = response.status_code
+    description = response.reason
+
+    # GET THE REQUEST'S CONTENT (HTML)
+    html = response.content
+
+    # PARSE THE HTML CODE TO GET THE SUBMISSION'S LINKS
+    soup = BeautifulSoup(html, 'html.parser')
+    links = soup.find_all('img', {'src': 'https://egela.ehu.eus/theme/image.php/ehu/assign/1678718742/icon'})
+
+    for link in links:
+
+        # CHECK IF THE HTML ELEMENT CONTAINS "/ICON"
+        if (link['src'].find("/icon") != -1):  # IF NOT FOUND -1
+            print("\n A NEW SUBMISSION HAS BEEN FOUND")
+            uriRequestSubmission = link.parent['href']  # GET THE URI OF THE RESOURCE
+            getSubmissionInfo()
+
+
+def getSubmissionInfo():
+
+    # THIS VARIABLE REFERS TO ONE SUBMISSION IN THE LABORATEGIKO PRAKTIKAK PAGE
+    global uriRequestSubmission
+
+    # SET THE REQUEST
+    method = 'GET'
+    headers = {'Host': uriRequestSubmission.split('/')[2], 'Cookie': cookie}
+
+    # GET THE REQUEST'S RESPONSE
+    response = requests.get(uriRequestSubmission, headers=headers, allow_redirects=False)
+    code = response.status_code
+    description = response.reason
+
+    # GET THE REQUEST'S CONTENT (HTML)
+    html = response.content
+
+    # PARSE THE HTML CODE TO GET THE SUBMISSION INFO
+    soup = BeautifulSoup(html, 'html.parser')
+    submissionName = soup.find('h2').contents[0]
+    print(submissionName)
+    submissionDate = soup.find('th', string='Entregatze-data').find_next('td').contents[0]
+    createCSV(submissionName, submissionDate, uriRequestSubmission)
+
+
+def createCSV(submissionName, submissionDate, uriRequestSubmission):
+
+    csv_path = Path('Submissions.csv')
+
+    if csv_path.is_file():
+        with open('Submissions.csv', 'a') as file:
+            file.write("Name: " + str(submissionName) + '\n')
+            file.write("Submit date: " + str(submissionDate) + '\n')
+            file.write("URI: " + uriRequestSubmission + '\n\n')
+    else:
+        with open('Submissions.csv', 'w') as file:
+            file.write("Name: " + str(submissionName) + '\n')
+            file.write("Submit date: " + str(submissionDate) + '\n')
+            file.write("URI: " + uriRequestSubmission + '\n\n')
 
 
 if __name__ == '__main__':
-
-
     print("------------------------------------------------------------")
     data_request()
     print("------------------------------------------------------------")
@@ -382,6 +430,6 @@ if __name__ == '__main__':
     print("------------------------------------------------------------")
     fifthRequest()
     print("------------------------------------------------------------")
-
-
-
+    labPageRequest()
+    print("------------------------------------------------------------")
+    submissionRequest()
