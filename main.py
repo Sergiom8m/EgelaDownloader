@@ -232,6 +232,7 @@ def fourthRequest():
 
 
 def fifthRequest():
+
     global uriRequest
 
     # SET THE REQUEST
@@ -266,6 +267,7 @@ def fifthRequest():
 
 
 def pdfRequest():
+
     global uriRequest
 
     # CREATE A FOLDER FOR THE DOWNLOADED PDF FILES
@@ -297,6 +299,7 @@ def pdfRequest():
 
 
 def downloadPDFRequest(uriPDF, namePDF):
+
     global countPDF
 
     print(" ---- DOWNLOADING PDF FILE ----")
@@ -364,7 +367,7 @@ def submissionRequest():
 
     # PARSE THE HTML CODE TO GET THE SUBMISSION'S LINKS
     soup = BeautifulSoup(html, 'html.parser')
-    links = soup.find_all('img', {'src': 'https://egela.ehu.eus/theme/image.php/ehu/assign/1678718742/icon'})
+    links = soup.find_all('img', {'src': 'https://egela.ehu.eus/theme/image.php/ehu/assign/1683210168/icon'})
 
     for link in links:
 
@@ -402,15 +405,19 @@ def getSubmissionInfo():
 
 def createCSV(submissionName, submissionDate, uriRequestSubmission):
 
-    csv_path = Path('Submissions.csv')
+    if not os.path.exists("csv"):
+        os.mkdir("csvls"
+                 "")
+
+    csv_path = Path('./csv/Submissions.csv')
 
     if csv_path.is_file():
-        with open('Submissions.csv', 'a') as file:
+        with open('./csv/Submissions.csv', 'a') as file:
             file.write("Name: " + str(submissionName) + '\n')
             file.write("Submit date: " + str(submissionDate) + '\n')
             file.write("URI: " + uriRequestSubmission + '\n\n')
     else:
-        with open('Submissions.csv', 'w') as file:
+        with open('./csv/Submissions.csv', 'w') as file:
             file.write("Name: " + str(submissionName) + '\n')
             file.write("Submit date: " + str(submissionDate) + '\n')
             file.write("URI: " + uriRequestSubmission + '\n\n')
